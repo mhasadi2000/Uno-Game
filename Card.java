@@ -3,8 +3,10 @@ package com.company;
 public class Card {
     private Type type;
     private CColor color;
-    public Card(){
 
+    public Card(Type type,CColor color){
+        this.type=type;
+        this.color=color;
     }
 
     public Type getType() {
