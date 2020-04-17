@@ -12,18 +12,19 @@ public class Repository {
     }
 
     public void createRepository(){
-        for (int i=0;i<2;i++){
+        for (int i=0;i<2;i++) {
             for (CColor color : CColor.values()) {
-                if (color==CColor.BLACK){
+                if (color == CColor.BLACK) {
                     continue;
                 }
-                for (Type type : Type.values()){
-                    if(type==Type.N0 || type==Type.P4 || type==Type.CC){
+                for (Type type : Type.values()) {
+                    if (type == Type.N0 || type == Type.P4 || type == Type.CC) {
                         continue;
                     }
                     cards.add(new Card(type, color));
                 }
             }
+        }
             for (int j=0;j<4;j++){
                 cards.add(new Card(Type.P4, CColor.BLACK));
                 cards.add(new Card(Type.CC, CColor.BLACK));
@@ -49,7 +50,7 @@ public class Repository {
             cards.add(new Card(Type.RV,CColor.BLUE));
             cards.add(new Card(Type.P2,CColor.BLUE));
             cards.add(new Card(Type.P4,CColor.BLUE));*/
-        }
+
     }
 
     public Card getCard(Type type,CColor color){
