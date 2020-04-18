@@ -13,6 +13,7 @@ public class UnoGame {
     private Card middleCard;
     private int numberOfPlayer;
     private int direction;
+    private boolean isBlock;
     private CColor currColor;
     private Type currType;
     private int bufferOfPlus;
@@ -22,6 +23,7 @@ public class UnoGame {
         cardSets=new ArrayList<>();
         recentCards=new Card[5];
         repository=new Repository();
+        this.isBlock=true;
         this.direction=0;
         this.bufferOfPlus=0;
         GameSteps();
@@ -40,7 +42,44 @@ public class UnoGame {
             System.out.println();
             Scanner sc=new Scanner(System.in);
 
-            drawBoard();
+            if (middleCard.getType()==Type.BL){
+                if (getDirection()==0) {
+                    i++;
+                    this.isBlock=false;
+                    if (i==getNumberOfPlayer()){
+                        i=0;
+                        clear();
+                    }
+                }
+                if (getDirection()==1) {
+                    i--;
+                    this.isBlock=false;
+                    if (i==-1){
+                        i=getNumberOfPlayer()-1;
+                        clear();
+                    }
+                }
+            }
+
+            /*if (isBlock && getDirection()==0) {
+                i++;
+                this.isBlock=false;
+                if (i==getNumberOfPlayer()){
+                    i=0;
+                    clear();
+                }
+            }
+
+            if (isBlock && getDirection()==1) {
+                i--;
+                this.isBlock=false;
+                if (i==-1){
+                    i=getNumberOfPlayer()-1;
+                    clear();
+                }
+            }
+*/
+            drawBoard(i);
             System.out.println("player "+i+" turn");
             drawYourSet(i);
             putCard(i);
@@ -52,12 +91,18 @@ public class UnoGame {
                 System.out.println();
                 condition=false;
             }
-            if (getDirection()==0)
+            if (getDirection()==0) {
                 i++;
-            else
+            }else{
                 i--;
+            }
+
             if (i==getNumberOfPlayer()){
                 i=0;
+                clear();
+            }
+            if (i==-1){
+                i=getNumberOfPlayer()-1;
                 clear();
             }
         }
@@ -179,6 +224,14 @@ public class UnoGame {
             //}
         }
 
+        if (getCurrType()==Type.RV){
+            changeDirection();
+        }
+
+        if (getCurrType()==Type.BL){
+            this.isBlock=true;
+        }
+
         if (middleCard.getType()==Type.P2 && getCurrType()!=Type.ColorOnly){
             while (it.hasNext()){
                 Card temp=it.next();
@@ -291,7 +344,7 @@ public class UnoGame {
         pickCard(1,playerNumber);
     }
 
-    public void drawBoard(){
+    public void drawBoard(int playerNumber){
         Iterator<CardSet> ite=cardSets.iterator();
         ite.next();
         int i=1;
@@ -300,16 +353,24 @@ public class UnoGame {
             i++;
         }
         System.out.println();
-        int j=1;//////=playerNumber
+        int j=playerNumber;
         int counter=0;
-        while (i<cardSets.size()){
-            if (recentCards[i]!=null){
-                System.out.print("       ");
-                draw(recentCards[i]);
-                System.out.print("       ");
+        while (j<cardSets.size() && j>0){
+            int k=0;
+            while (k<j){
+                System.out.print("    ");
+                k++;
+            }
+            if (recentCards[j]!=null){
+                System.out.print("    ");
+                draw(recentCards[j]);
+                System.out.print("    ");
             }
             counter++;
-            j++;///////by dir
+            if (getDirection()==0)
+                j++;
+            else
+                j--;
         }
         if (counter!=i-1)
             System.out.print(" TURN");
@@ -449,6 +510,7 @@ public class UnoGame {
     }
 
     public boolean sameNumber(Card card){
+        if (card!=null)
         if (getCurrType().equals(card.getType()))
             return true;
         return false;
