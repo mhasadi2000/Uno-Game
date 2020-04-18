@@ -34,23 +34,6 @@ public class Repository {
             cards.add(new Card(Type.N0, CColor.GREEN));
             cards.add(new Card(Type.N0, CColor.YELLOW));
 
-            /*
-            cards.add(new Card(Type.N0,CColor.BLUE));
-            cards.add(new Card(Type.N1,CColor.BLUE));
-            cards.add(new Card(Type.N2,CColor.BLUE));
-            cards.add(new Card(Type.N3,CColor.BLUE));
-            cards.add(new Card(Type.N4,CColor.BLUE));
-            cards.add(new Card(Type.N5,CColor.BLUE));
-            cards.add(new Card(Type.N6,CColor.BLUE));
-            cards.add(new Card(Type.N7,CColor.BLUE));
-            cards.add(new Card(Type.N8,CColor.BLUE));
-            cards.add(new Card(Type.N9,CColor.BLUE));
-            cards.add(new Card(Type.BL,CColor.BLUE));
-            cards.add(new Card(Type.CC,CColor.BLUE));
-            cards.add(new Card(Type.RV,CColor.BLUE));
-            cards.add(new Card(Type.P2,CColor.BLUE));
-            cards.add(new Card(Type.P4,CColor.BLUE));*/
-
     }
 
     public Card getCard(Type type,CColor color){
