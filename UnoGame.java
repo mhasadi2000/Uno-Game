@@ -1,10 +1,7 @@
 package com.company;
 
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 
 public class UnoGame {
@@ -71,22 +68,26 @@ public class UnoGame {
             if (i==0) {
                 drawBoard();
                 System.out.println("it is your turn");
+                System.out.println("enter the card number from 1");
                 drawYourSet(0);
                 putCardManually();
             }else{
                 drawBoard();
                 System.out.println("player "+i+" turn");
-                drawYourSet(i);
+                drawYourSet(0);/////////////////////
                 putCard(i);
             }
             System.out.println();
             if (cardSets.get(i).getCards().size()==0) {
                 System.out.println();
                 System.out.print(ColorConsole.MAGENTA);
+                checkTotal();
                 if (i==0)
                     System.out.println("you win the game");
                 else
                     System.out.println("player"+i+" win the game");
+                System.out.println();
+                checkTotal();
                 condition=false;
             }
             if (getDirection()==0) {
@@ -120,6 +121,87 @@ public class UnoGame {
             i++;
         }
         this.numberOfPlayer=numberOfPlayer;
+    }
+
+    public void checkTotal(){
+        ArrayList<Integer> finall=new ArrayList<>();
+        int i=0;
+
+        int result=0;
+        while(i<cardSets.size()){
+            int sum=0;
+            Iterator<Card> cardIterator=cardSets.get(i).getCards().iterator();
+            while (cardIterator.hasNext()){
+                switch (cardIterator.next().getType()){
+                    case P2:
+                        sum+=20;
+                        break;
+                    case BL:
+                        sum+=20;
+                        break;
+                    case P4:
+                        sum+=50;
+                        break;
+                    case RV:
+                        sum+=20;
+                        break;
+                    case CC:
+                        sum+=50;
+                        break;
+                    case N0:
+                        break;
+                    case N1:
+                        sum+=1;
+                        break;
+                    case N2:
+                        sum+=2;
+                        break;
+                    case N3:
+                        sum+=3;
+                        break;
+                    case N4:
+                        sum+=4;
+                        break;
+                    case N5:
+                        sum+=5;
+                        break;
+                    case N6:
+                        sum+=6;
+                        break;
+                    case N7:
+                        sum+=7;
+                        break;
+                    case N8:
+                        sum+=8;
+                        break;
+                    case N9:
+                        sum+=9;
+                        break;
+                    default:
+                        sum+=0;
+                }
+            }
+            finall.add(sum);
+            cardSets.get(i).setSum(sum);
+            i++;
+        }
+        Collections.sort(finall);
+        int j=0;
+        while (j<finall.size()){
+            int k=0;
+            while (k<cardSets.size()){
+                if (finall.get(j)==cardSets.get(k).getSum()){
+                    System.out.print(ColorConsole.CYAN);
+                    if (k==0)
+                        System.out.println("YOU"+" score: "+cardSets.get(k).getSum());
+                    System.out.println("player "+k+" score: "+cardSets.get(k).getSum());
+                    break;
+                }
+                k++;
+            }
+            j++;
+        }
+        System.out.print(ColorConsole.RESET);
     }
 
     public void createCardSet(){
@@ -423,14 +505,14 @@ public class UnoGame {
     public void putCardManually(){
         Scanner scn=new Scanner(System.in);
         int index=scn.nextInt();
-        while (index>=cardSets.get(0).getCards().size()){
+        while (index-1>=cardSets.get(0).getCards().size()){
             System.out.println("the number you entered is out of band.");
             index=scn.nextInt();
         }
-        put(index,0);
+        put(index-1);
     }
 
-    public boolean put(int index,int extraMove){
+    public boolean put(int index){
         Card card=cardSets.get(0).getCards().get(index);
 
         if (getCurrType()==Type.P4){////////////////////change to currcolor
