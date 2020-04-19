@@ -83,7 +83,10 @@ public class UnoGame {
             if (cardSets.get(i).getCards().size()==0) {
                 System.out.println();
                 System.out.print(ColorConsole.MAGENTA);
-                System.out.println("player"+i+" win the game");
+                if (i==0)
+                    System.out.println("you win the game");
+                else
+                    System.out.println("player"+i+" win the game");
                 condition=false;
             }
             if (getDirection()==0) {
@@ -397,6 +400,21 @@ public class UnoGame {
 
         }
 
+        Card cardTemp=pickRandom();
+        cardSets.get(playerNumber).addCard(cardTemp);
+        repository.removeCard(cardTemp);
+        if (cardTemp.getType()==getCurrType() || cardTemp.getColor()==getCurrColor()){
+            repository.addToRep(middleCard);
+            setPreviousCard(middleCard);
+            middleCard=cardTemp;
+            setCurrColor(cardTemp.getColor());
+            setCurrType(cardTemp.getType());
+            cardSets.get(0).removeCard(cardTemp);
+            setRecentCards(0,cardTemp);
+            System.out.print("put the taken card:");
+            draw(cardTemp);
+        }
+
         //System.out.println("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
         pickCard(1,playerNumber);
         setPreviousCard(null);
@@ -409,10 +427,10 @@ public class UnoGame {
             System.out.println("the number you entered is out of band.");
             index=scn.nextInt();
         }
-        put(index);
+        put(index,0);
     }
 
-    public boolean put(int index){
+    public boolean put(int index,int extraMove){
         Card card=cardSets.get(0).getCards().get(index);
 
         if (getCurrType()==Type.P4){////////////////////change to currcolor
@@ -584,12 +602,29 @@ public class UnoGame {
             increaseBufferOfPlus(4);
             return true;
         }
+        Card cardTemp=pickRandom();
+        cardSets.get(0).addCard(cardTemp);
+        repository.removeCard(cardTemp);
+        if (cardTemp.getType()==getCurrType() || cardTemp.getColor()==getCurrColor()){
+            repository.addToRep(middleCard);
+            setPreviousCard(middleCard);
+            middleCard=cardTemp;
+            setCurrColor(cardTemp.getColor());
+            setCurrType(cardTemp.getType());
+            cardSets.get(0).removeCard(cardTemp);
+            setRecentCards(0,cardTemp);
+            System.out.print("put the taken card:");
+            draw(cardTemp);
+        }
         //System.out.println("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-        pickCard(1,0);
+        //pickCard(1,0);
+
         setPreviousCard(null);
         return true;
     }
 
+    public void putIfPossible(){
+    }
 
 
     public void drawBoard(){
@@ -670,7 +705,7 @@ public class UnoGame {
     public void draw(Card card){
 
         if (card==null){
-            System.out.println("zeki");
+            System.out.println("card is null");
             return;
         }
         if (card.getColor().equals(CColor.RED))
