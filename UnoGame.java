@@ -505,7 +505,7 @@ public class UnoGame {
     public void putCardManually(){
         Scanner scn=new Scanner(System.in);
         int index=scn.nextInt();
-        while (index-1>=cardSets.get(0).getCards().size()){
+        while (index-1>=cardSets.get(0).getCards().size() || index-1<0){
             System.out.println("the number you entered is out of band.");
             index=scn.nextInt();
         }
