@@ -1,16 +1,18 @@
 package com.company;
 
-import java.awt.image.ColorConvertOp;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Scanner;
+
 
 public class UnoGame {
     private ArrayList<CardSet> cardSets;
     private Card[] recentCards;
     private Repository repository;
     private Card middleCard;
+    private Card previousCard;
     private int numberOfPlayer;
     private int direction;
     private boolean isBlock;
@@ -18,6 +20,7 @@ public class UnoGame {
     private Type currType;
     private int bufferOfPlus;
     private int startIndex;
+    private int changedColor;
 
     public UnoGame(){
         cardSets=new ArrayList<>();
@@ -40,7 +43,11 @@ public class UnoGame {
         while (condition){
             setCurrColor(middleCard.getColor());
             System.out.println();
-            Scanner sc=new Scanner(System.in);
+            //clear console
+            for(int clear = 0; clear < 100; clear++)
+            {
+                System.out.println("\b") ;
+            }
 
             if (middleCard.getType()==Type.BL){
                 if (getDirection()==0) {
@@ -61,34 +68,22 @@ public class UnoGame {
                 }
             }
 
-            /*if (isBlock && getDirection()==0) {
-                i++;
-                this.isBlock=false;
-                if (i==getNumberOfPlayer()){
-                    i=0;
-                    clear();
-                }
-            }
-
-            if (isBlock && getDirection()==1) {
-                i--;
-                this.isBlock=false;
-                if (i==-1){
-                    i=getNumberOfPlayer()-1;
-                    clear();
-                }
-            }
-*/
-            drawBoard(i);
-            System.out.println("player "+i+" turn");
-            drawYourSet(i);
-            putCard(i);
             if (i==0) {
-                int t=sc.nextInt();
+                drawBoard();
+                System.out.println("it is your turn");
+                drawYourSet(0);
+                putCardManually();
+            }else{
+                drawBoard();
+                System.out.println("player "+i+" turn");
+                drawYourSet(i);
+                putCard(i);
             }
             System.out.println();
             if (cardSets.get(i).getCards().size()==0) {
                 System.out.println();
+                System.out.print(ColorConsole.MAGENTA);
+                System.out.println("player"+i+" win the game");
                 condition=false;
             }
             if (getDirection()==0) {
@@ -105,6 +100,11 @@ public class UnoGame {
                 i=getNumberOfPlayer()-1;
                 clear();
             }
+            //delay
+            int delay=2000;
+            long start = System.currentTimeMillis();
+            while(start >= System.currentTimeMillis() - delay);
+
         }
     }
 
@@ -155,6 +155,12 @@ public class UnoGame {
         if( card!=null){ ////if exist in rep
            setCurrType(type);
            setCurrColor(color);
+           if (type==Type.P2)
+               increaseBufferOfPlus(2);
+           if (type==Type.RV)
+               changeDirection();
+           if (type==Type.BL)
+               this.isBlock=true;
             return card;
         }
         return pickRandom();
@@ -185,6 +191,16 @@ public class UnoGame {
         }
     }
 
+    public void putONBoard(Card temp,int playerNumber){
+        repository.addToRep(middleCard);
+        setPreviousCard(middleCard);
+        middleCard=temp;
+        setCurrColor(temp.getColor());
+        setCurrType(temp.getType());
+        cardSets.get(playerNumber).removeCard(temp);
+        setRecentCards(playerNumber,temp);
+    }
+
     public void putCard(int playerNumber){
         Iterator<Card> ite=cardSets.get(playerNumber).getCards().iterator();
         Iterator<Card> it=cardSets.get(playerNumber).getCards().iterator();
@@ -193,20 +209,22 @@ public class UnoGame {
         Card buff=null;
 
         if (getCurrType()==Type.P4){////////////////////change to currcolor
-            //if(getCurrType()==Type.P4){/////////////////////change to currtype
                 while (it.hasNext()){
                     Card temp=it.next();
                     if(temp.getType()==Type.P2){
                         repository.addToRep(middleCard);
+                        setPreviousCard(middleCard);
                         middleCard=temp;
                         setCurrColor(temp.getColor());
                         setCurrType(temp.getType());
                         cardSets.get(playerNumber).removeCard(temp);
                         setRecentCards(playerNumber,temp);
                         increaseBufferOfPlus(2);
+                        setChangedColor(temp.getColor());///////////////////
                         return;
                     }else if (sameNumber(temp)){
                         repository.addToRep(middleCard);
+                        setPreviousCard(middleCard);
                         middleCard=temp;
                         changeColor(playerNumber);
                         setCurrType(temp.getType());
@@ -216,21 +234,14 @@ public class UnoGame {
                         return;
                     }
                 }
-                pickCard(4 + getBufferOfPlus(),playerNumber);
+                pickCard( getBufferOfPlus(),playerNumber);
                 resetBufferOfPlus();
-                //changeColor(playerNumber);
                 setCurrType(Type.ColorOnly);
+                setPreviousCard(null);
                 return;
-            //}
         }
 
-        if (getCurrType()==Type.RV){
-            changeDirection();
-        }
 
-        if (getCurrType()==Type.BL){
-            this.isBlock=true;
-        }
 
         if (middleCard.getType()==Type.P2 && getCurrType()!=Type.ColorOnly){
             while (it.hasNext()){
@@ -239,17 +250,20 @@ public class UnoGame {
                     buf=temp;
                 if(sameNumber(temp)){
                     repository.addToRep(middleCard);
+                    setPreviousCard(middleCard);
                     middleCard=temp;
                     setCurrColor(temp.getColor());
                     setCurrType(temp.getType());
                     cardSets.get(playerNumber).removeCard(temp);
                     setRecentCards(playerNumber,temp);
                     increaseBufferOfPlus(2);
+                    setChangedColor(temp.getColor());
                     return;
                 }
             }
             if (buf!=null){
                 repository.addToRep(middleCard);
+                setPreviousCard(middleCard);
                 middleCard=buf;
                 changeColor(playerNumber);
                 setCurrType(buf.getType());
@@ -258,25 +272,42 @@ public class UnoGame {
                 increaseBufferOfPlus(4);
                 return;
             }
-            pickCard(2+getBufferOfPlus(),playerNumber);
+            pickCard(getBufferOfPlus(),playerNumber);
+            resetBufferOfPlus();
             setCurrType(Type.ColorOnly);
+            setPreviousCard(null);
             return;
         }
 
         if (getCurrType()==Type.ColorOnly){
+            setCurrColor(CColor.getColor(changedColor));
             while (iter.hasNext()){
                 Card temp=iter.next();
-                if (playerNumber!=0)
-                    changeColor(playerNumber);////////////
-                System.out.println(getCurrColor().toString()+"/////////////////////////");
+                //setCurrColor(CColor.getColor(changedColor));
+                //if (playerNumber!=0)
+                //    changeColor(playerNumber);////////////
+                //System.out.println(getCurrColor().toString()+"/////////////////////////");
                 if(temp.getColor()==getCurrColor() && getCurrColor()!=CColor.BLACK){
-                    System.out.println("same color////////////////////////////");
+                    //System.out.println("same color////////////////////////////");
                     repository.addToRep(middleCard);
+                    setPreviousCard(middleCard);
                     middleCard=temp;
                     setCurrColor(temp.getColor());
                     setCurrType(temp.getType());
                     cardSets.get(playerNumber).removeCard(temp);
                     setRecentCards(playerNumber,temp);
+
+                    if (getCurrType()==Type.P2)
+                        setChangedColor(temp.getColor());
+
+                    if (getCurrType()==Type.RV){
+                        changeDirection();
+                    }
+
+                    if (getCurrType()==Type.BL){
+                        this.isBlock=true;
+                    }
+
                     return;
                 }
             }
@@ -287,13 +318,25 @@ public class UnoGame {
             Card temp=ite.next();
             if (temp.getColor()!= CColor.BLACK){
                 if(temp.getColor()==getCurrColor()){
-                    System.out.println("same color////////////////////////////");
+                    //System.out.println("same color////////////////////////////");
                     repository.addToRep(middleCard);
+                    setPreviousCard(middleCard);
                     middleCard=temp;
                     setCurrColor(temp.getColor());
                     setCurrType(temp.getType());
                     cardSets.get(playerNumber).removeCard(temp);
                     setRecentCards(playerNumber,temp);
+
+                    if (temp.getType()==Type.P2)
+                        setChangedColor(temp.getColor());
+
+                    if (getCurrType()==Type.RV){
+                        changeDirection();
+                    }
+
+                    if (getCurrType()==Type.BL){
+                        this.isBlock=true;
+                    }
                     return;
                 }
             }
@@ -307,30 +350,43 @@ public class UnoGame {
                 buf=temp;
             if(sameNumber(temp) && temp.getType()!=Type.ColorOnly){
                 repository.addToRep(middleCard);
+                setPreviousCard(middleCard);
                 middleCard=temp;
                 setCurrColor(temp.getColor());
                 setCurrType(temp.getType());
                 cardSets.get(playerNumber).removeCard(temp);
                 setRecentCards(playerNumber,temp);
+
+                if (temp.getType()==Type.P2)
+                    setChangedColor(temp.getColor());
+
+                if (getCurrType()==Type.RV){
+                    changeDirection();
+                }
+
+                if (getCurrType()==Type.BL){
+                    this.isBlock=true;
+                }
                 return;
             }
         }
 
         if (buf!=null){///////////////CC
             repository.addToRep(middleCard);
+            setPreviousCard(middleCard);
             middleCard=buf;
             //setCurrColor(CColor.RED);////////////////////
             changeColor(playerNumber);
-            System.out.println(getCurrColor().toString()+"/////////////////");
+            //System.out.println(getCurrColor().toString()+"/////////////////");
             setCurrType(Type.ColorOnly);
             cardSets.get(playerNumber).removeCard(buf);
             setRecentCards(playerNumber,buf);
-            System.out.println("CC bi pedar////////////");
             return;
         }
 
         if (buff!=null){//////////////P4
             repository.addToRep(middleCard);
+            setPreviousCard(middleCard);
             middleCard=buff;
             changeColor(playerNumber);
             setCurrType(buff.getType());
@@ -340,47 +396,247 @@ public class UnoGame {
             return;
 
         }
-        System.out.println("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+
+        //System.out.println("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
         pickCard(1,playerNumber);
+        setPreviousCard(null);
     }
 
-    public void drawBoard(int playerNumber){
+    public void putCardManually(){
+        Scanner scn=new Scanner(System.in);
+        int index=scn.nextInt();
+        while (index>=cardSets.get(0).getCards().size()){
+            System.out.println("the number you entered is out of band.");
+            index=scn.nextInt();
+        }
+        put(index);
+    }
+
+    public boolean put(int index){
+        Card card=cardSets.get(0).getCards().get(index);
+
+        if (getCurrType()==Type.P4){////////////////////change to currcolor
+            if (card.getType()==Type.P2){
+                repository.addToRep(middleCard);
+                setPreviousCard(middleCard);
+                middleCard=card;
+                setCurrColor(card.getColor());
+                setCurrType(card.getType());
+                cardSets.get(0).removeCard(card);
+                setRecentCards(0,card);
+                increaseBufferOfPlus(2);
+                setChangedColor(card.getColor());
+                return true;
+            }
+
+                if (sameNumber(card)){
+                    repository.addToRep(middleCard);
+                    setPreviousCard(middleCard);
+                    middleCard=card;
+                    changeColor(0);
+                    setCurrType(card.getType());
+                    cardSets.get(0).removeCard(card);
+                    setRecentCards(0,card);
+                    increaseBufferOfPlus(4);
+                    return true;
+                }
+
+            pickCard( getBufferOfPlus(),0);
+            resetBufferOfPlus();
+            setCurrType(Type.ColorOnly);
+            setPreviousCard(null);
+            return true;
+        }
+
+
+        if (middleCard.getType()==Type.P2 && getCurrType()!=Type.ColorOnly){
+                if(card.getType()==Type.P2){
+                    repository.addToRep(middleCard);
+                    setPreviousCard(middleCard);
+                    middleCard=card;
+                    setCurrColor(card.getColor());
+                    setCurrType(card.getType());
+                    cardSets.get(0).removeCard(card);
+                    setRecentCards(0,card);
+                    increaseBufferOfPlus(2);
+                    setChangedColor(card.getColor());
+                    return true;
+                }
+
+            if (card.getType()==Type.P4){
+                repository.addToRep(middleCard);
+                setPreviousCard(middleCard);
+                middleCard=card;
+                changeColor(0);
+                setCurrType(card.getType());
+                cardSets.get(0).removeCard(card);
+                setRecentCards(0,card);
+                increaseBufferOfPlus(4);
+                return true;
+            }
+            pickCard(getBufferOfPlus(),0);
+            resetBufferOfPlus();
+            setCurrType(Type.ColorOnly);
+            setPreviousCard(null);
+            return true;
+        }
+
+        if (getCurrType()==Type.ColorOnly){
+                setCurrColor(CColor.getColor(changedColor));
+                //System.out.println(getCurrColor().toString()+"/////////////////////////");
+                if(card.getColor()==getCurrColor() && getCurrColor()!=CColor.BLACK){
+                    //System.out.println("same color////////////////////////////");
+                    repository.addToRep(middleCard);
+                    setPreviousCard(middleCard);
+                    middleCard=card;
+                    setCurrColor(card.getColor());
+                    setCurrType(card.getType());
+                    cardSets.get(0).removeCard(card);
+                    setRecentCards(0,card);
+
+                    if (getCurrType()==Type.P2)
+                        setChangedColor(card.getColor());
+
+                    if (getCurrType()==Type.RV){
+                        changeDirection();
+                    }
+
+                    if (getCurrType()==Type.BL){
+                        this.isBlock=true;
+                    }
+
+                    return true;
+                }
+        }
+
+
+
+            if (card.getColor()!= CColor.BLACK){
+                if(card.getColor()==getCurrColor()){
+                    //System.out.println("same color////////////////////////////");
+                    repository.addToRep(middleCard);
+                    setPreviousCard(middleCard);
+                    middleCard=card;
+                    setCurrColor(card.getColor());
+                    setCurrType(card.getType());
+                    cardSets.get(0).removeCard(card);
+                    setRecentCards(0,card);
+
+                    if (getCurrType()==Type.P2)
+                        setChangedColor(card.getColor());
+
+                    if (getCurrType()==Type.RV){
+                        changeDirection();
+                    }
+
+                    if (getCurrType()==Type.BL){
+                        this.isBlock=true;
+                    }
+
+                    return true;
+                }
+            }
+
+            if(sameNumber(card) && card.getType()!=Type.ColorOnly){
+                repository.addToRep(middleCard);
+                setPreviousCard(middleCard);
+                middleCard=card;
+                setCurrColor(card.getColor());
+                setCurrType(card.getType());
+                cardSets.get(0).removeCard(card);
+                setRecentCards(0,card);
+
+                if (getCurrType()==Type.P2)
+                    setChangedColor(card.getColor());
+
+                if (getCurrType()==Type.RV){
+                    changeDirection();
+                }
+
+                if (getCurrType()==Type.BL){
+                    this.isBlock=true;
+                }
+
+                return true;
+            }
+
+
+        if (card.getType()==Type.CC){///////////////CC
+            repository.addToRep(middleCard);
+            setPreviousCard(middleCard);
+            middleCard=card;
+            changeColor(0);
+            //System.out.println(getCurrColor().toString()+"/////////////////");
+            setCurrType(Type.ColorOnly);
+            cardSets.get(0).removeCard(card);
+            setRecentCards(0,card);
+            return true;
+        }
+
+        if (card.getType()==Type.P4){//////////////P4
+            repository.addToRep(middleCard);
+            setPreviousCard(middleCard);
+            middleCard=card;
+            changeColor(0);
+            setCurrType(card.getType());
+            cardSets.get(0).removeCard(card);
+            setRecentCards(0,card);
+            increaseBufferOfPlus(4);
+            return true;
+        }
+        //System.out.println("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+        pickCard(1,0);
+        setPreviousCard(null);
+        return true;
+    }
+
+
+
+    public void drawBoard(){
         Iterator<CardSet> ite=cardSets.iterator();
         ite.next();
         int i=1;
         while (i<cardSets.size()){
-            System.out.print("player"+i+" "+cardSets.get(i).getCards().size()+"  |");
+            System.out.print(ColorConsole.CYAN);
+            System.out.print("player"+i+" "+cardSets.get(i).getCards().size()+"| ");
             i++;
         }
+        System.out.print(ColorConsole.RESET);
+        System.out.print(ColorConsole.MAGENTA);
         System.out.println();
-        int j=playerNumber;
-        int counter=0;
-        while (j<cardSets.size() && j>0){
-            int k=0;
-            while (k<j){
-                System.out.print("    ");
-                k++;
-            }
-            if (recentCards[j]!=null){
-                System.out.print("    ");
-                draw(recentCards[j]);
-                System.out.print("    ");
-            }
-            counter++;
-            if (getDirection()==0)
-                j++;
-            else
-                j--;
+        System.out.println("previous movement:");
+        System.out.print(ColorConsole.RESET);
+        Card previous=getPreviousCard();
+        if (previous!=null){
+            if (previous.getColor()==CColor.RED)
+                System.out.print(ColorConsole.RED);
+            if (previous.getColor()==CColor.YELLOW)
+                System.out.print(ColorConsole.YELLOW);
+            if (previous.getColor()==CColor.GREEN)
+                System.out.print(ColorConsole.GREEN);
+            if (previous.getColor()==CColor.BLUE)
+                System.out.print(ColorConsole.BLUE);
+            if (previous.getColor()==CColor.BLACK)
+                System.out.print(ColorConsole.BLACK);
+            System.out.println("$$$$$$$$");
+            System.out.println("$  "+previous.getType()+"  $");
+            System.out.println("$$$$$$$$");
         }
-        if (counter!=i-1)
-            System.out.print(" TURN");
+
         System.out.println();
+        System.out.print(ColorConsole.MAGENTA);
         if (getDirection()==0)
             System.out.println("clockwise -->");
         else
             System.out.println("anti clockwise <--");
+        System.out.print(ColorConsole.RESET);
 
         drawMiddleCard();
+        if (getCurrType()==Type.ColorOnly){
+            System.out.print(ColorConsole.MAGENTA);
+            System.out.println(CColor.getColor(changedColor).toString());
+            System.out.print(ColorConsole.RESET);
+        }
     }
 
     public void drawMiddleCard(){
@@ -460,20 +716,25 @@ public class UnoGame {
             switch (color){
                 case "R":
                     setCurrColor(CColor.RED);
+                    setChangedColor(0);
                     break;
                 case "B":
                     setCurrColor(CColor.BLUE);
+                    setChangedColor(1);
                     break;
                 case "G":
                     setCurrColor(CColor.GREEN);
+                    setChangedColor(2);
                     break;
                 case "Y":
                     setCurrColor(CColor.YELLOW);
+                    setChangedColor(3);
                     break;
                 default:
                     System.out.println("the color that you entered is not possible");
                     changeColor(playerNumber);
             }
+
         }else {
             Random rand=new Random();
             int r=rand.nextInt(4);
@@ -496,12 +757,11 @@ public class UnoGame {
             }
             //setCurrColor(CColor.getColor(r));
             System.out.println(getCurrColor().toString());/////////////////////
+            setChangedColor(r);
         }
-    }
-
-    public void freeType(){
 
     }
+
 
     public boolean sameColor(Card card){
         if (getCurrColor().equals(card.getColor()))//////////currColor
@@ -515,13 +775,6 @@ public class UnoGame {
             return true;
         return false;
     }
-
-
-    public void changeTypeOfMiddleCard(Type type){
-        middleCard.setType(type);
-    }
-
-
 
     public int getNumberOfPlayer() {
         return numberOfPlayer;
@@ -574,5 +827,41 @@ public class UnoGame {
 
     public void setCurrType(Type currType) {
         this.currType = currType;
+    }
+
+    public void setChangedColor(int changedColor) {
+        this.changedColor = changedColor;
+    }
+
+    public void setChangedColor(CColor color){
+        switch (color){
+            case RED:
+                setCurrColor(CColor.RED);
+                setChangedColor(0);
+                break;
+            case BLUE:
+                setCurrColor(CColor.BLUE);
+                setChangedColor(1);
+                break;
+            case GREEN:
+                setCurrColor(CColor.GREEN);
+                setChangedColor(2);
+                break;
+            case YELLOW:
+                setCurrColor(CColor.YELLOW);
+                setChangedColor(3);
+                break;
+            default:
+                System.out.println("the color that you entered is not possible");
+        }
+
+    }
+
+    public Card getPreviousCard() {
+        return previousCard;
+    }
+
+    public void setPreviousCard(Card previousCard) {
+        this.previousCard = previousCard;
     }
 }
